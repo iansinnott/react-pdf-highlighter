@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { classNames } from "../lib/classnames";
 
 import "../style/Tip.css";
 
@@ -12,6 +13,7 @@ interface Props {
   onConfirm: (comment: { text: string; emoji: string }) => void;
   onOpen: () => void;
   onUpdate?: () => void;
+  className?: string;
 }
 
 export class Tip extends Component<Props, State> {
@@ -31,11 +33,11 @@ export class Tip extends Component<Props, State> {
   }
 
   render() {
-    const { onConfirm, onOpen } = this.props;
+    const { onConfirm, onOpen, className } = this.props;
     const { compact, text, emoji } = this.state;
 
     return (
-      <div className="Tip">
+      <div className={classNames("Tip", className)}>
         {compact ? (
           <div
             className="Tip__compact"
