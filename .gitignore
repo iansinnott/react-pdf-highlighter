@@ -4,4 +4,4 @@ dist
 dist-ssr
 dist-example
 *.local
-types
+types.vscode/settings.json
