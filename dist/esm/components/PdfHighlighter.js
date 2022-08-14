@@ -10,7 +10,7 @@ var __rest = (this && this.__rest) || function (s, e) {
     return t;
 };
 import React, { PureComponent } from "react";
-import ReactDom from "react-dom";
+import ReactDom from "react-dom/client";
 import debounce from "lodash.debounce";
 import { EventBus, PDFViewer, PDFLinkService, } from "pdfjs-dist/legacy/web/pdf_viewer";
 import "pdfjs-dist/web/pdf_viewer.css";
@@ -215,9 +215,15 @@ export class PdfHighlighter extends PureComponent {
                 this.viewer.currentScaleValue = this.props.pdfScaleValue; //"page-width";
             }
         };
-        this.debouncedScaleValue = debounce(this.handleScaleValue, 500);
+        this.debouncedScaleValue = debounce(this.handleScaleValue, this.props.resizeDebounceMs);
         if (typeof ResizeObserver !== "undefined") {
             this.resizeObserver = new ResizeObserver(this.debouncedScaleValue);
+        }
+        this.validateProps();
+    }
+    validateProps() {
+        if (this.props.resizeDebounceMs < 0) {
+            console.warn("[PdfHighlighter] WARNING You passed a negative value for resizeDebounceMs");
         }
     }
     componentDidMount() {
@@ -334,7 +340,7 @@ export class PdfHighlighter extends PureComponent {
         for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
             const highlightLayer = this.findOrCreateHighlightLayer(pageNumber);
             if (highlightLayer) {
-                ReactDom.render(React.createElement("div", null, (highlightsByPage[String(pageNumber)] || []).map((_a, index) => {
+                ReactDom.createRoot(highlightLayer).render(React.createElement("div", null, (highlightsByPage[String(pageNumber)] || []).map((_a, index) => {
                     var { position, id } = _a, highlight = __rest(_a, ["position", "id"]);
                     // @ts-ignore
                     const viewportHighlight = Object.assign({ id, position: this.scaledPositionToViewport(position) }, highlight);
@@ -351,7 +357,7 @@ export class PdfHighlighter extends PureComponent {
                         const viewport = this.viewer.getPageView((rect.pageNumber || pageNumber) - 1).viewport;
                         return viewportToScaled(rect, viewport);
                     }, (boundingRect) => this.screenshot(boundingRect, pageNumber), isScrolledTo);
-                })), highlightLayer);
+                })));
             }
         }
     }
@@ -399,5 +405,6 @@ export class PdfHighlighter extends PureComponent {
 }
 PdfHighlighter.defaultProps = {
     pdfScaleValue: "auto",
+    resizeDebounceMs: 300,
 };
 //# sourceMappingURL=PdfHighlighter.js.map

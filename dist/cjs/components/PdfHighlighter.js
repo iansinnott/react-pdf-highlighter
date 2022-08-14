@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PdfHighlighter = void 0;
 const react_1 = __importStar(require("react"));
-const react_dom_1 = __importDefault(require("react-dom"));
+const client_1 = __importDefault(require("react-dom/client"));
 const lodash_debounce_1 = __importDefault(require("lodash.debounce"));
 const pdf_viewer_1 = require("pdfjs-dist/legacy/web/pdf_viewer");
 require("pdfjs-dist/web/pdf_viewer.css");
@@ -240,9 +240,15 @@ class PdfHighlighter extends react_1.PureComponent {
                 this.viewer.currentScaleValue = this.props.pdfScaleValue; //"page-width";
             }
         };
-        this.debouncedScaleValue = (0, lodash_debounce_1.default)(this.handleScaleValue, 500);
+        this.debouncedScaleValue = (0, lodash_debounce_1.default)(this.handleScaleValue, this.props.resizeDebounceMs);
         if (typeof ResizeObserver !== "undefined") {
             this.resizeObserver = new ResizeObserver(this.debouncedScaleValue);
+        }
+        this.validateProps();
+    }
+    validateProps() {
+        if (this.props.resizeDebounceMs < 0) {
+            console.warn("[PdfHighlighter] WARNING You passed a negative value for resizeDebounceMs");
         }
     }
     componentDidMount() {
@@ -359,7 +365,7 @@ class PdfHighlighter extends react_1.PureComponent {
         for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
             const highlightLayer = this.findOrCreateHighlightLayer(pageNumber);
             if (highlightLayer) {
-                react_dom_1.default.render(react_1.default.createElement("div", null, (highlightsByPage[String(pageNumber)] || []).map((_a, index) => {
+                client_1.default.createRoot(highlightLayer).render(react_1.default.createElement("div", null, (highlightsByPage[String(pageNumber)] || []).map((_a, index) => {
                     var { position, id } = _a, highlight = __rest(_a, ["position", "id"]);
                     // @ts-ignore
                     const viewportHighlight = Object.assign({ id, position: this.scaledPositionToViewport(position) }, highlight);
@@ -376,7 +382,7 @@ class PdfHighlighter extends react_1.PureComponent {
                         const viewport = this.viewer.getPageView((rect.pageNumber || pageNumber) - 1).viewport;
                         return (0, coordinates_1.viewportToScaled)(rect, viewport);
                     }, (boundingRect) => this.screenshot(boundingRect, pageNumber), isScrolledTo);
-                })), highlightLayer);
+                })));
             }
         }
     }
@@ -425,5 +431,6 @@ class PdfHighlighter extends react_1.PureComponent {
 exports.PdfHighlighter = PdfHighlighter;
 PdfHighlighter.defaultProps = {
     pdfScaleValue: "auto",
+    resizeDebounceMs: 300,
 };
 //# sourceMappingURL=PdfHighlighter.js.map

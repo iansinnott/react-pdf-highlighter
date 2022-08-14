@@ -33,16 +33,21 @@ interface Props<T_HT> {
     onScrollChange: () => void;
     scrollRef: (scrollTo: (highlight: IHighlight) => void) => void;
     pdfDocument: PDFDocumentProxy;
-    pdfScaleValue: string;
+    /**
+     * Should be one of the predefined values or a numeric string, such as "1.2"
+     */
+    pdfScaleValue: "auto" | "page-width" | "page-fit" | string;
     onSelectionFinished: (position: ScaledPosition, content: {
         text?: string;
         image?: string;
     }, hideTipAndSelection: () => void, transformSelection: () => void) => JSX.Element | null;
     enableAreaSelection: (event: MouseEvent) => boolean;
+    resizeDebounceMs: number;
 }
 export declare class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<Props<T_HT>, State<T_HT>> {
     static defaultProps: {
         pdfScaleValue: string;
+        resizeDebounceMs: number;
     };
     state: State<T_HT>;
     eventBus: EventBus;
@@ -52,6 +57,7 @@ export declare class PdfHighlighter<T_HT extends IHighlight> extends PureCompone
     containerNode?: HTMLDivElement | null;
     unsubscribe: () => void;
     constructor(props: Props<T_HT>);
+    validateProps(): void;
     componentDidMount(): void;
     attachRef: (ref: HTMLDivElement | null) => void;
     componentDidUpdate(prevProps: Props<T_HT>): void;
