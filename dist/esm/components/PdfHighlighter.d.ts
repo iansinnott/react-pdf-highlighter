@@ -1,4 +1,5 @@
 import { PointerEventHandler, PureComponent } from "react";
+import ReactDom from "react-dom/client";
 import { EventBus, PDFViewer, PDFLinkService } from "pdfjs-dist/legacy/web/pdf_viewer";
 import "pdfjs-dist/web/pdf_viewer.css";
 import "../style/pdf_viewer.css";
@@ -43,11 +44,13 @@ interface Props<T_HT> {
     }, hideTipAndSelection: () => void, transformSelection: () => void) => JSX.Element | null;
     enableAreaSelection: (event: MouseEvent) => boolean;
     resizeDebounceMs: number;
+    selectionDebounceMs: number;
 }
 export declare class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<Props<T_HT>, State<T_HT>> {
     static defaultProps: {
         pdfScaleValue: string;
         resizeDebounceMs: number;
+        selectionDebounceMs: number;
     };
     state: State<T_HT>;
     eventBus: EventBus;
@@ -63,7 +66,8 @@ export declare class PdfHighlighter<T_HT extends IHighlight> extends PureCompone
     componentDidUpdate(prevProps: Props<T_HT>): void;
     init(): void;
     componentWillUnmount(): void;
-    findOrCreateHighlightLayer(page: number): Element | null;
+    roots: Map<any, any>;
+    findOrCreateHighlightLayer(page: number): ReactDom.Root | null;
     groupHighlightsByPage(highlights: Array<T_HT>): {
         [pageNumber: string]: Array<T_HT>;
     };

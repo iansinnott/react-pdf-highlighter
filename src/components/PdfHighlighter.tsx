@@ -1,6 +1,6 @@
 import React, { PointerEventHandler, PureComponent } from "react";
 import ReactDom from "react-dom/client";
-import debounce from "lodash.debounce";
+import { debounce } from "throttle-debounce";
 
 import {
   EventBus,
@@ -91,6 +91,7 @@ interface Props<T_HT> {
   ) => JSX.Element | null;
   enableAreaSelection: (event: MouseEvent) => boolean;
   resizeDebounceMs: number;
+  selectionDebounceMs: number;
 }
 
 const EMPTY_ID = "empty-id";
@@ -102,6 +103,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
   static defaultProps = {
     pdfScaleValue: "auto",
     resizeDebounceMs: 300,
+    selectionDebounceMs: 120,
   };
 
   state: State<T_HT> = {
@@ -628,7 +630,10 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
     );
   };
 
-  debouncedAfterSelection: () => void = debounce(this.afterSelection, 500);
+  debouncedAfterSelection: () => void = debounce(
+    this.props.selectionDebounceMs,
+    this.afterSelection
+  );
 
   toggleTextSelection(flag: boolean) {
     this.viewer.viewer!.classList.toggle(
@@ -644,8 +649,8 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
   };
 
   debouncedScaleValue: () => void = debounce(
-    this.handleScaleValue,
-    this.props.resizeDebounceMs
+    this.props.resizeDebounceMs,
+    this.handleScaleValue
   );
 
   render() {

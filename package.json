@@ -34,13 +34,13 @@
     "react-dom": ">=18.0.0"
   },
   "dependencies": {
-    "@types/lodash.debounce": "^4.0.6",
     "@types/pdfjs-dist": "^2.7.4",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
-    "lodash.debounce": "^4.0.8",
+    "@types/throttle-debounce": "^5.0.0",
     "pdfjs-dist": "2.11.338",
-    "react-rnd": "^10.1.10"
+    "react-rnd": "^10.1.10",
+    "throttle-debounce": "^5.0.0"
   },
   "repository": {
     "type": "git",

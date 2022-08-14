@@ -36,7 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PdfHighlighter = void 0;
 const react_1 = __importStar(require("react"));
 const client_1 = __importDefault(require("react-dom/client"));
-const lodash_debounce_1 = __importDefault(require("lodash.debounce"));
+const throttle_debounce_1 = require("throttle-debounce");
 const pdf_viewer_1 = require("pdfjs-dist/legacy/web/pdf_viewer");
 require("pdfjs-dist/web/pdf_viewer.css");
 require("../style/pdf_viewer.css");
@@ -96,6 +96,7 @@ class PdfHighlighter extends react_1.PureComponent {
                 };
             }
         };
+        this.roots = new Map();
         this.hideTipAndSelection = () => {
             this.setState({
                 tipPosition: null,
@@ -234,13 +235,13 @@ class PdfHighlighter extends react_1.PureComponent {
                 ghostHighlight: { position: scaledPosition },
             }, () => this.renderHighlights())));
         };
-        this.debouncedAfterSelection = (0, lodash_debounce_1.default)(this.afterSelection, 500);
+        this.debouncedAfterSelection = (0, throttle_debounce_1.debounce)(this.props.selectionDebounceMs, this.afterSelection);
         this.handleScaleValue = () => {
             if (this.viewer) {
                 this.viewer.currentScaleValue = this.props.pdfScaleValue; //"page-width";
             }
         };
-        this.debouncedScaleValue = (0, lodash_debounce_1.default)(this.handleScaleValue, this.props.resizeDebounceMs);
+        this.debouncedScaleValue = (0, throttle_debounce_1.debounce)(this.props.resizeDebounceMs, this.handleScaleValue);
         if (typeof ResizeObserver !== "undefined") {
             this.resizeObserver = new ResizeObserver(this.debouncedScaleValue);
         }
@@ -280,18 +281,32 @@ class PdfHighlighter extends react_1.PureComponent {
         this.linkService.setDocument(pdfDocument);
         this.linkService.setViewer(this.viewer);
         this.viewer.setDocument(pdfDocument);
+        // When initializing a new doc discard all previous react root refs
+        this.roots = new Map();
         // debug
         window.PdfViewer = this;
     }
     componentWillUnmount() {
         this.unsubscribe();
+        // Make sure roots isn't holding on to any refs
+        this.roots = new Map();
     }
     findOrCreateHighlightLayer(page) {
         const { textLayer } = this.viewer.getPageView(page - 1) || {};
         if (!textLayer) {
             return null;
         }
-        return (0, pdfjs_dom_1.findOrCreateContainerLayer)(textLayer.textLayerDiv, "PdfHighlighter__highlight-layer");
+        const el = (0, pdfjs_dom_1.findOrCreateContainerLayer)(textLayer.textLayerDiv, "PdfHighlighter__highlight-layer");
+        if (this.roots.get(el)) {
+            console.debug("[react root nonsense] Hit cached root");
+            return this.roots.get(el);
+        }
+        else {
+            const root = client_1.default.createRoot(el);
+            this.roots.set(el, root);
+            console.debug("[react root nonsense] Initializing new react root for", el);
+            return root;
+        }
     }
     groupHighlightsByPage(highlights) {
         const { ghostHighlight } = this.state;
@@ -365,7 +380,7 @@ class PdfHighlighter extends react_1.PureComponent {
         for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
             const highlightLayer = this.findOrCreateHighlightLayer(pageNumber);
             if (highlightLayer) {
-                client_1.default.createRoot(highlightLayer).render(react_1.default.createElement("div", null, (highlightsByPage[String(pageNumber)] || []).map((_a, index) => {
+                highlightLayer.render(react_1.default.createElement("div", null, (highlightsByPage[String(pageNumber)] || []).map((_a, index) => {
                     var { position, id } = _a, highlight = __rest(_a, ["position", "id"]);
                     // @ts-ignore
                     const viewportHighlight = Object.assign({ id, position: this.scaledPositionToViewport(position) }, highlight);
@@ -432,5 +447,6 @@ exports.PdfHighlighter = PdfHighlighter;
 PdfHighlighter.defaultProps = {
     pdfScaleValue: "auto",
     resizeDebounceMs: 300,
+    selectionDebounceMs: 120,
 };
 //# sourceMappingURL=PdfHighlighter.js.map
