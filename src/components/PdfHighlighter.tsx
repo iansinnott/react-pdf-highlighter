@@ -85,6 +85,7 @@ interface Props<T_HT> {
     transformSelection: () => void
   ) => JSX.Element | null;
   enableAreaSelection: (event: MouseEvent) => boolean;
+  resizeDebounceMs: number;
 }
 
 const EMPTY_ID = "empty-id";
@@ -95,6 +96,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
 > {
   static defaultProps = {
     pdfScaleValue: "auto",
+    resizeDebounceMs: 300,
   };
 
   state: State<T_HT> = {
@@ -122,8 +124,19 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
 
   constructor(props: Props<T_HT>) {
     super(props);
+
     if (typeof ResizeObserver !== "undefined") {
       this.resizeObserver = new ResizeObserver(this.debouncedScaleValue);
+    }
+
+    this.validateProps();
+  }
+
+  validateProps() {
+    if (this.props.resizeDebounceMs < 0) {
+      console.warn(
+        "[PdfHighlighter] WARNING You passed a negative value for resizeDebounceMs"
+      );
     }
   }
 
@@ -606,7 +619,10 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
     }
   };
 
-  debouncedScaleValue: () => void = debounce(this.handleScaleValue, 500);
+  debouncedScaleValue: () => void = debounce(
+    this.handleScaleValue,
+    this.props.resizeDebounceMs
+  );
 
   render() {
     const { onSelectionFinished, enableAreaSelection } = this.props;
