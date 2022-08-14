@@ -207,25 +207,45 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
     this.linkService.setViewer(this.viewer);
     this.viewer.setDocument(pdfDocument);
 
+    // When initializing a new doc discard all previous react root refs
+    this.roots = new Map();
+
     // debug
     (window as any).PdfViewer = this;
   }
 
   componentWillUnmount() {
     this.unsubscribe();
+    // Make sure roots isn't holding on to any refs
+    this.roots = new Map();
   }
 
-  findOrCreateHighlightLayer(page: number) {
+  roots: Map<any, any> = new Map();
+
+  findOrCreateHighlightLayer(page: number): ReactDom.Root | null {
     const { textLayer } = this.viewer.getPageView(page - 1) || {};
 
     if (!textLayer) {
       return null;
     }
 
-    return findOrCreateContainerLayer(
+    const el = findOrCreateContainerLayer(
       textLayer.textLayerDiv,
       "PdfHighlighter__highlight-layer"
     );
+
+    if (this.roots.get(el)) {
+      console.debug("[react root nonsense] Hit cached root");
+      return this.roots.get(el);
+    } else {
+      const root = ReactDom.createRoot(el);
+      this.roots.set(el, root);
+      console.debug(
+        "[react root nonsense] Initializing new react root for",
+        el
+      );
+      return root;
+    }
   }
 
   groupHighlightsByPage(highlights: Array<T_HT>): {
@@ -340,7 +360,7 @@ export class PdfHighlighter<T_HT extends IHighlight> extends PureComponent<
       const highlightLayer = this.findOrCreateHighlightLayer(pageNumber);
 
       if (highlightLayer) {
-        ReactDom.createRoot(highlightLayer).render(
+        highlightLayer.render(
           <div>
             {(highlightsByPage[String(pageNumber)] || []).map(
               ({ position, id, ...highlight }, index) => {
