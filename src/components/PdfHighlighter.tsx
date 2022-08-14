@@ -77,7 +77,12 @@ interface Props<T_HT> {
   onScrollChange: () => void;
   scrollRef: (scrollTo: (highlight: IHighlight) => void) => void;
   pdfDocument: PDFDocumentProxy;
-  pdfScaleValue: string;
+
+  /**
+   * Should be one of the predefined values or a numeric string, such as "1.2"
+   */
+  pdfScaleValue: "auto" | "page-width" | "page-fit" | string;
+
   onSelectionFinished: (
     position: ScaledPosition,
     content: { text?: string; image?: string },
