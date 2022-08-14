@@ -3,6 +3,11 @@ import React, { Component } from "react";
 import { getDocument, GlobalWorkerOptions } from "pdfjs-dist/legacy/build/pdf";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 
+// @note PDF dist should include the worker itself. If Vite is configured then
+// the following line will work. I'm leaving as is for now though b/c vite might
+// not be properly configured for URL imports
+// import defaultWorkerSrc from "pdfjs-dist/build/pdf.worker.js?url";
+
 interface Props {
   /** See `GlobalWorkerOptionsType`. */
   workerSrc: string;
